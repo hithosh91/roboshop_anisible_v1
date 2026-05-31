@@ -1,0 +1,50 @@
+---
+- name: cart component
+  hosts: all
+  become: true
+  tasks:
+  - name: application user
+    ansible.builtin.user:
+      name: appuser
+      state: present
+      shell: /bin/false
+      create_home: false
+  - name: copy cart configuration file
+    ansible.builtin.copy:
+      src: cart.service
+      dest: /etc/systemd/system/cart.service
+  - name: install nodejs
+    ansible.builtin.shell:  curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+  - name: install nodejs
+    ansible.builtin.dnf:
+      name: nodejs
+      state: present
+  - name: remove app folder
+    ansible.builtin.file: 
+      path: /app
+      state: absent
+  - name: create app folder
+    ansible.builtin.file:
+      path: /app
+      state: directory
+     
+  - name: downlad application code
+    ansible.builtin.unarchive:
+        src: https://raw.githubusercontent.com/raghudevopsb89/roboshop-microservices/main/artifacts/cart.zip
+        dest: /app
+        remote_src: yes
+  - name: permissions for app folder
+    ansible.builtin.file:
+    path: /app
+    owner: appuser
+    group: appuser
+    RECURSIVE: yes
+    mode:  'o-rwx'
+  
+  - name: start cart service
+    ansible.builtin.systemd:
+      name: cart
+      state: restarted
+      enabled: true
+      deamon_reload: yes
+      
