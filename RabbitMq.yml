@@ -1,0 +1,34 @@
+---
+- name: RabbitMQ component
+  hosts: all
+  become: true
+  tasks:
+  - name:  copy rabbitmq repository configuration file
+    ansible.builtin.copy:
+      src: rabbitmq.repo 
+      dest: /etc/yum.repos.d/rabbitmq.repo
+  - name: install rabbitmq server erlang
+    ansible.builtin.dnf:
+      name:
+        - erlang
+        - rabbitmq-server
+      state: present
+  - name: start rabbitmq service
+    ansible.builtin.systemd:
+      name: rabbitmq-server
+      state: restarted
+      enabled: true
+
+  
+  - name: create app user in rabbitmq
+    community.rabbitmq.rabbitmq_user:
+        user: roboshop
+        password: RoboShop@1
+        tags: administrator
+        vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        state: present
+
+    
